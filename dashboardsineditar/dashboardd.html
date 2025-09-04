@@ -4,14 +4,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sistema de Administración de Usuarios</title>
+    <!-- Enlace a la librería Tailwind CSS para estilos de utilidad -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Enlace a Font Awesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Enlace a Toastify JS para notificaciones tipo "toast" -->
     <link href="https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css" rel="stylesheet">
+    <!-- Enlace a la hoja de estilos personalizada -->
     <link rel="stylesheet" href="style.css"> <!-- Enlace al CSS externo -->
 </head>
 <body class="bg-gray-100">
 <div class="flex flex-col h-screen">
-    <!-- Header -->
+    <!-- Header: Contiene el botón para alternar el sidebar y el título principal de la aplicación -->
     <header class="header flex items-center px-6 shadow-md">
         <button id="sidebarToggleBtn" class="text-white text-2xl mr-4 focus:outline-none">
             <i class="fas fa-bars"></i>
@@ -19,25 +23,28 @@
         <h1 class="text-xl font-bold text-white">Sistema de Administración de Usuarios</h1>
     </header>
 
-    <!-- Main Content -->
+    <!-- Main Content Area: Contiene el sidebar y el área principal de contenido -->
     <div class="flex flex-1 overflow-hidden">
-        <!-- Sidebar -->
+        <!-- Sidebar: Menú de navegación lateral con opciones de filtro y creación de usuario -->
         <aside id="sidebar" class="sidebar text-white overflow-y-auto">
             <div class="p-4">
+                <!-- Botón para abrir el modal de creación de usuario -->
                 <button id="createUserBtn" class="btn-primary w-full flex items-center justify-center mb-6">
                     <i class="fas fa-plus mr-2"></i> <span class="sidebar-text">Crear Usuario</span>
                 </button>
 
+                <!-- Sección de filtros por rol -->
                 <div class="mb-4">
                     <h3 class="font-bold mb-2"><span class="sidebar-text">Filtros</span></h3>
 
-                    <!-- Alumnos -->
+                    <!-- Contenedor para el rol de Alumnos -->
                     <div class="role-container mb-2">
                         <div class="role-item flex items-center justify-between" data-role="alumnos">
                             <i class="fas fa-user-graduate mr-2"></i> <span class="sidebar-text">Alumnos</span>
                             <i class="fas fa-chevron-right chevron"></i>
                         </div>
-                        <div class="sub-role" id="alumnos-sub">
+                        <!-- Sub-roles de Alumnos (ocultos temporalmente) -->
+                        <div class="sub-role" id="alumnos-sub" style="display: none;">
                             <div class="role-item" data-subrole="vigente">
                                 <i class="fas fa-check-circle mr-2"></i> <span class="sidebar-text">Vigente</span>
                             </div>
@@ -50,13 +57,14 @@
                         </div>
                     </div>
 
-                    <!-- Funcionarios -->
+                    <!-- Contenedor para el rol de Funcionarios -->
                     <div class="role-container mb-2">
                         <div class="role-item flex items-center justify-between" data-role="funcionarios">
                             <i class="fas fa-user-tie mr-2"></i> <span class="sidebar-text">Funcionarios</span>
                             <i class="fas fa-chevron-right chevron"></i>
                         </div>
-                        <div class="sub-role" id="funcionarios-sub">
+                        <!-- Sub-roles de Funcionarios (ocultos temporalmente) -->
+                        <div class="sub-role" id="funcionarios-sub" style="display: none;">
                             <div class="role-item" data-subrole="administrativo">
                                 <i class="fas fa-briefcase mr-2"></i> <span class="sidebar-text">Administrativo</span>
                             </div>
@@ -69,13 +77,14 @@
                         </div>
                     </div>
 
-                    <!-- Externos -->
+                    <!-- Contenedor para el rol de Externos -->
                     <div class="role-container mb-2">
                         <div class="role-item flex items-center justify-between" data-role="externos">
                             <i class="fas fa-user-friends mr-2"></i> <span class="sidebar-text">Externos</span>
                             <i class="fas fa-chevron-right chevron"></i>
                         </div>
-                        <div class="sub-role" id="externos-sub">
+                        <!-- Sub-roles de Externos (ocultos temporalmente) -->
+                        <div class="sub-role" id="externos-sub" style="display: none;">
                             <div class="role-item" data-subrole="proveedor">
                                 <i class="fas fa-truck mr-2"></i> <span class="sidebar-text">Proveedor</span>
                             </div>
@@ -92,17 +101,20 @@
             </div>
         </aside>
 
-        <!-- Main Area -->
+        <!-- Main Area: Contenido principal de la aplicación -->
         <main class="flex-1 p-6 overflow-y-auto">
+            <!-- Sección principal de Usuarios (originalmente para datos de localStorage) -->
             <div class="bg-white rounded-lg shadow-md p-6 w-full"> <!-- Added w-full here -->
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-gray-800">Usuarios</h2>
+                    <!-- Campo de búsqueda de usuarios -->
                     <div class="relative">
                         <input type="text" id="searchInput" placeholder="Buscar usuarios..." class="form-control pr-10">
                         <i id="searchIcon" class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer"></i>
                     </div>
                 </div>
 
+                <!-- Contenedor de la tabla de usuarios -->
                 <div class="table-container">
                     <table id="usersTable">
                         <thead>
@@ -117,11 +129,12 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <!-- Table content will be dynamically populated -->
+                        <!-- El contenido de la tabla se llenará dinámicamente con JavaScript -->
                         </tbody>
                     </table>
                 </div>
 
+                <!-- Mensaje a mostrar cuando no hay usuarios (para la tabla de localStorage) -->
                 <div id="noUsersMessage" class="hidden text-center py-8 text-gray-500">
                     <i class="fas fa-users text-5xl mb-4"></i>
                     <p>No hay usuarios para mostrar</p>
@@ -131,17 +144,20 @@
                 </div>
             </div>
             
-            <!-- Sección SGU_USUARIO (Oracle): lista datos desde la API PHP -->
+            <!-- Sección SGU_USUARIO (Oracle): Muestra datos obtenidos de la API PHP -->
             <div class="bg-white rounded-lg shadow-md p-6 w-full mt-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-2xl font-bold text-gray-800">SGU_USUARIO (Oracle)</h2>
+                    <!-- Controles para el límite de filas y botón de carga de datos de Oracle -->
                     <div class="flex items-center space-x-3">
                         <input id="oracleLimit" type="number" min="1" max="1000" value="100" class="form-control w-24" title="Límite de filas">
                         <button id="loadOracleBtn" class="btn-primary">Cargar SGU_USUARIO</button>
                     </div>
                 </div>
+                <!-- Área para mostrar el estado de la carga de datos de Oracle -->
                 <p id="oracleStatus" class="text-sm text-gray-500 mb-3"></p>
 
+                <!-- Contenedor de la tabla de usuarios de Oracle -->
                 <div class="table-container">
                     <table id="oracleTable">
                         <thead></thead>
@@ -149,6 +165,7 @@
                     </table>
                 </div>
 
+                <!-- Mensaje a mostrar cuando no hay datos de Oracle -->
                 <div id="oracleNoData" class="hidden text-center py-8 text-gray-500">
                     <i class="fas fa-database text-5xl mb-4"></i>
                     <p>No hay datos para mostrar</p>
@@ -158,7 +175,7 @@
     </div>
 </div>
 
-<!-- Create/Edit User Modal -->
+<!-- Create/Edit User Modal: Formulario para crear o editar usuarios -->
 <div id="userModal" class="modal">
     <div class="modal-content">
         <div class="p-6">
@@ -172,30 +189,35 @@
             <form id="userForm">
                 <input type="hidden" id="userId">
 
+                <!-- Campo para el nombre del usuario -->
                 <div class="form-group">
                     <label for="userName" class="block mb-1 font-medium">Nombre</label>
                     <input type="text" id="userName" class="form-control" required>
                     <div id="userNameError" class="error-message hidden">El nombre es requerido</div>
                 </div>
 
+                <!-- Campo para el email del usuario -->
                 <div class="form-group">
                     <label for="userEmail" class="block mb-1 font-medium">Email</label>
                     <input type="email" id="userEmail" class="form-control" required>
                     <div id="userEmailError" class="error-message hidden">Ingrese un email válido</div>
                 </div>
 
+                <!-- Campo para el teléfono del usuario -->
                 <div class="form-group">
                     <label for="userPhone" class="block mb-1 font-medium">Teléfono</label>
                     <input type="tel" id="userPhone" class="form-control" required>
                     <div id="userPhoneError" class="error-message hidden">Ingrese un teléfono válido</div>
                 </div>
 
+                <!-- Campo para el departamento del usuario -->
                 <div class="form-group">
                     <label for="userDepartment" class="block mb-1 font-medium">Departamento</label>
                     <input type="text" id="userDepartment" class="form-control" required>
                     <div id="userDepartmentError" class="error-message hidden">El departamento es requerido</div>
                 </div>
 
+                <!-- Campo para el rol del usuario (select) -->
                 <div class="form-group">
                     <label for="userRole" class="block mb-1 font-medium">Rol</label>
                     <select id="userRole" class="form-control" required>
@@ -207,15 +229,17 @@
                     <div id="userRoleError" class="error-message hidden">Seleccione un rol</div>
                 </div>
 
-                <div class="form-group">
+                <!-- Campo para el sub-rol del usuario (oculto temporalmente) -->
+                <div class="form-group" style="display: none;">
                     <label for="userSubRole" class="block mb-1 font-medium">Sub-Rol</label>
                     <select id="userSubRole" class="form-control" required disabled>
                         <option value="">Seleccione un sub-rol</option>
-                        <!-- Options will be populated dynamically -->
+                        <!-- Las opciones se poblarán dinámicamente si se habilita -->
                     </select>
                     <div id="userSubRoleError" class="error-message hidden">Seleccione un sub-rol</div>
                 </div>
 
+                <!-- Botones de acción del formulario (Cancelar y Guardar) -->
                 <div class="flex justify-end mt-6 space-x-4">
                     <button type="button" id="cancelBtn" class="btn-secondary">Cancelar</button>
                     <button type="submit" id="saveBtn" class="btn-primary">
@@ -228,7 +252,7 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
+<!-- Delete Confirmation Modal: Modal para confirmar la eliminación de un usuario -->
 <div id="deleteModal" class="modal">
     <div class="modal-content w-96">
         <div class="p-6">
@@ -247,7 +271,7 @@
     </div>
 </div>
 
-<!-- Reset Confirmation Modal -->
+<!-- Reset Confirmation Modal: Modal para confirmar el reinicio de todos los datos -->
 <div id="resetModal" class="modal">
     <div class="modal-content w-96">
         <div class="p-6">
@@ -266,7 +290,9 @@
     </div>
 </div>
 
+<!-- Enlace a la librería Toastify JS (para notificaciones) -->
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<!-- Enlace al archivo JavaScript principal de la aplicación -->
 <script src="script.js"></script> <!-- Enlace al JavaScript externo -->
 </body>
 </html>
