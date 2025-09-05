@@ -26,13 +26,13 @@ if (!isset($_SESSION['user_id'])) {
             <button id="sidebarToggleBtn" class="text-white text-2xl mr-4 focus:outline-none">
                 <i class="fas fa-bars"></i>
             </button>
-            <h1 class="text-xl font-bold text-white">Sistema de Administración de Usuarios</h1>
+            <h1 id="profileTitle" class="text-xl font-bold text-white">Gestion de Usuario</h1>
         </div>
         <div class="flex items-center">
             <button id="darkModeToggle" class="text-white text-2xl mr-4 focus:outline-none">
                 <i class="fas fa-moon"></i>
             </button>
-            <img src="https://www.unap.cl/prontus_unap/imag/logo_unap_2022-07_blanco.png" alt="Logo UNAP" class="h-10">
+            <img id="unapLogo" src="https://www.unap.cl/prontus_unap/imag/logo_unap_2022-07_blanco.png" alt="Logo UNAP" class="h-10">
         </div>
     </header>
 
@@ -41,9 +41,6 @@ if (!isset($_SESSION['user_id'])) {
         <!-- Sidebar -->
         <aside id="sidebar" class="sidebar text-white overflow-y-auto flex flex-col">
             <div class="p-4">
-                <button id="createUserBtn" class="btn-primary w-full flex items-center justify-center mb-2">
-                    <i class="fas fa-plus mr-2"></i> <span class="sidebar-text">Crear Usuario</span>
-                </button>
                 <a href="dashboardd.php" class="role-item flex items-center justify-start mb-2">
                     <i class="fas fa-home mr-2"></i> <span class="sidebar-text">Inicio</span>
                 </a>
@@ -117,7 +114,36 @@ if (!isset($_SESSION['user_id'])) {
     </div>
 </div>
 
+<!-- Honorary Mention Modal -->
+<div id="honoraryModal" class="modal">
+    <div class="modal-content w-96">
+        <div class="p-6 text-center">
+            <div class="flex justify-end">
+                <button id="closeHonoraryModal" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-4">¡Felicitaciones!</h3>
+            <p>Has descubierto el Easter Egg de Matrix.</p>
+            <p class="text-sm text-gray-500 mt-2">Mención honorífica por tu curiosidad.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Image Easter Egg Modal -->
+<div id="imageEasterEggModal" class="modal">
+    <div class="modal-content-image">
+        <button id="closeImageEasterEggModal" class="text-gray-400 hover:text-gray-600 focus:outline-none absolute top-2 right-2">
+            <i class="fas fa-times"></i>
+        </button>
+        <img src="./logo-animado/HTML/Imagenes/felicidades_por_encontrarme.png" alt="Felicidades por encontrarme" class="max-w-full max-h-full object-contain">
+    </div>
+</div>
+
+<canvas id="matrixCanvas" class="hidden"></canvas>
+
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script src="perfil.js"></script>
+<script src="easter-egg.js"></script>
 </body>
 </html>

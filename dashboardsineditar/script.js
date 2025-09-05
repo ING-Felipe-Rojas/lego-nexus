@@ -19,6 +19,11 @@ const searchIcon = document.getElementById('searchIcon');
 const logoutBtn = document.getElementById('logoutBtn');
 const darkModeToggle = document.getElementById('darkModeToggle');
 
+// Logout Modal Elements
+const logoutModal = document.getElementById('logoutModal');
+const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
+const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
+
 // Elementos para la sección Oracle (SGU_USUARIO)
 const loadOracleBtn = document.getElementById('loadOracleBtn');
 const oracleLimitInput = document.getElementById('oracleLimit');
@@ -72,9 +77,25 @@ if (localStorage.getItem('theme') === 'dark') {
     darkModeToggle.querySelector('i').classList.replace('fa-sun', 'fa-moon');
 }
 
+// Logout button event listener (now opens modal)
 if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-        window.location.href = 'index.html';
+    logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault(); // Prevent default link behavior
+        logoutModal.style.display = 'flex'; // Show the logout confirmation modal
+    });
+}
+
+// Cancel logout button event listener
+if (cancelLogoutBtn) {
+    cancelLogoutBtn.addEventListener('click', () => {
+        logoutModal.style.display = 'none'; // Hide the logout confirmation modal
+    });
+}
+
+// Confirm logout button event listener
+if (confirmLogoutBtn) {
+    confirmLogoutBtn.addEventListener('click', () => {
+        window.location.href = 'logout.php'; // Proceed with logout
     });
 }
 
@@ -431,7 +452,7 @@ function openEditUserModal(user) {
     
     // Find role name from role ID
     const roleNameMap = Object.fromEntries(Object.entries(roleIdMap).map(([name, id]) => [id, name]));
-    const roleName = roleNameMap[user.USR_ROL_ID] || '';
+    const roleName = roleNameMap[user.USR_ROL_ID] ? roleNameMap[user.USR_ROL_ID] : '';
     document.getElementById('userRole').value = roleName;
 
     // Department is not in the provided columns, so we leave it empty.

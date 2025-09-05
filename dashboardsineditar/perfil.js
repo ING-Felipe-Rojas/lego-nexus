@@ -2,6 +2,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const profileForm = document.getElementById('profileForm');
     const passwordForm = document.getElementById('passwordForm');
     const darkModeToggle = document.getElementById('darkModeToggle');
+    const profileTitle = document.getElementById('profileTitle'); // New: Reference to the title
+    const imageEasterEggModal = document.getElementById('imageEasterEggModal'); // New: Reference to the image modal
+    const closeImageEasterEggModal = document.getElementById('closeImageEasterEggModal'); // New: Reference to the close button
+
+    let titleClickCount = 0; // New: Click counter for the title
+    let titleClickTimer; // New: Timer for title clicks
 
     // --- Inicialización ---
     fetchUserDetails();
@@ -37,6 +43,37 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         updatePassword();
     });
+
+    // New: Event listener for the profile title
+    if (profileTitle) {
+        profileTitle.addEventListener('click', function() {
+            titleClickCount++;
+
+            clearTimeout(titleClickTimer);
+            titleClickTimer = setTimeout(() => {
+                titleClickCount = 0; // Reset count if clicks are too slow
+            }, 500); // 500ms window for rapid clicks
+
+            if (titleClickCount >= 3) {
+                showImageEasterEggModal();
+                titleClickCount = 0; // Reset count after triggering
+            }
+        });
+    }
+
+    // New: Event listener for the close button of the image modal
+    if (closeImageEasterEggModal) {
+        closeImageEasterEggModal.addEventListener('click', hideImageEasterEggModal);
+    }
+
+    // New: Event listener to close image modal when clicking outside its content
+    if (imageEasterEggModal) {
+        imageEasterEggModal.addEventListener('click', (e) => {
+            if (e.target === imageEasterEggModal) {
+                hideImageEasterEggModal();
+            }
+        });
+    }
 
     // --- Funciones ---
 
@@ -132,6 +169,32 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error al cambiar la contraseña:', error);
             showToast('Error de conexión al cambiar la contraseña.', 'error');
         });
+    }
+
+    /**
+     * Muestra el modal del Easter Egg de la imagen.
+     */
+    function showImageEasterEggModal() {
+        if (imageEasterEggModal) {
+            imageEasterEggModal.style.display = 'flex';
+            // Add a small delay to allow the modal to become 'display: flex' before applying active class
+            setTimeout(() => {
+                imageEasterEggModal.classList.add('active');
+            }, 50);
+        }
+    }
+
+    /**
+     * Oculta el modal del Easter Egg de la imagen.
+     */
+    function hideImageEasterEggModal() {
+        if (imageEasterEggModal) {
+            imageEasterEggModal.classList.remove('active');
+            // Add a small delay to allow the transition to complete before hiding
+            setTimeout(() => {
+                imageEasterEggModal.style.display = 'none';
+            }, 500); // Match this with the CSS transition duration
+        }
     }
 
     /**

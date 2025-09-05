@@ -43,7 +43,7 @@ if (!isset($_SESSION['user_id'])) {
             <button id="darkModeToggle" class="text-white text-2xl mr-4 focus:outline-none">
                 <i class="fas fa-moon"></i>
             </button>
-            <img src="https://www.unap.cl/prontus_unap/imag/logo_unap_2022-07_blanco.png" alt="Logo UNAP" class="h-10">
+            <img id="unapLogo" src="https://www.unap.cl/prontus_unap/imag/logo_unap_2022-07_blanco.png" alt="Logo UNAP" class="h-10">
         </div>
     </header>
 
@@ -52,17 +52,10 @@ if (!isset($_SESSION['user_id'])) {
         <!-- Sidebar: Menú de navegación lateral con opciones de filtro y creación de usuario -->
         <aside id="sidebar" class="sidebar text-white overflow-y-auto flex flex-col">
             <div class="p-4">
-
                 <!-- Botón de Perfil -->
                 <a href="perfil.php" class="role-item flex items-center justify-start mb-6">
                     <i class="fas fa-user-cog mr-2"></i> <span class="sidebar-text">Perfil</span>
                 </a>
-
-                <!-- Botón para abrir el modal de creación de usuario -->
-                <button id="createUserBtn" class="btn-primary w-full flex items-center justify-center mb-2">
-                    <i class="fas fa-plus mr-2"></i> <span class="sidebar-text">Crear Usuario</span>
-                </button>
-
                 <!-- Botón de Inicio -->
                 <a href="dashboardd.php" class="role-item flex items-center justify-start mb-2">
                     <i class="fas fa-home mr-2"></i> <span class="sidebar-text">Inicio</span>
@@ -75,7 +68,6 @@ if (!isset($_SESSION['user_id'])) {
                     <div class="role-container mb-2">
                         <div class="role-item flex items-center justify-between" data-role="alumnos">
                             <i class="fas fa-user-graduate mr-2"></i> <span class="sidebar-text">Alumnos</span>
-                            <i class="fas fa-chevron-right chevron"></i>
                         </div>
                         <!-- Sub-roles de Alumnos (ocultos temporalmente) -->
                         <div class="sub-role" id="alumnos-sub" style="display: none;">
@@ -95,7 +87,6 @@ if (!isset($_SESSION['user_id'])) {
                     <div class="role-container mb-2">
                         <div class="role-item flex items-center justify-between" data-role="funcionarios">
                             <i class="fas fa-user-tie mr-2"></i> <span class="sidebar-text">Funcionarios</span>
-                            <i class="fas fa-chevron-right chevron"></i>
                         </div>
                         <!-- Sub-roles de Funcionarios (ocultos temporalmente) -->
                         <div class="sub-role" id="funcionarios-sub" style="display: none;">
@@ -115,7 +106,6 @@ if (!isset($_SESSION['user_id'])) {
                     <div class="role-container mb-2">
                         <div class="role-item flex items-center justify-between" data-role="externos">
                             <i class="fas fa-user-friends mr-2"></i> <span class="sidebar-text">Externos</span>
-                            <i class="fas fa-chevron-right chevron"></i>
                         </div>
                         <!-- Sub-roles de Externos (ocultos temporalmente) -->
                         <div class="sub-role" id="externos-sub" style="display: none;">
@@ -134,9 +124,9 @@ if (!isset($_SESSION['user_id'])) {
 
             </div>
             <div class="p-4 mt-auto">
-                <a href="logout.php" id="logoutBtn" class="btn-danger w-full flex items-center justify-center">
+                <button id="logoutBtn" class="btn-danger py-2 px-4 rounded-md mx-auto block">
                     <i class="fas fa-sign-out-alt mr-2"></i> <span class="sidebar-text">Cerrar Sesión</span>
-                </a>
+                </button>
             </div>
         </aside>
 
@@ -147,12 +137,15 @@ if (!isset($_SESSION['user_id'])) {
             <div class="bg-white rounded-lg shadow-md p-6 w-full mt-6">
                 <div class="flex justify-between items-center mb-4">
                     <div class="flex items-center space-x-4">
-                        <h2 class="text-2xl font-bold text-gray-800">Usuarios</h2>
                         <!-- Campo de búsqueda de usuarios -->
                         <div class="relative">
                             <input type="text" id="searchInput" placeholder="Buscar usuarios..." class="form-control pr-10">
                             <i id="searchIcon" class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer"></i>
                         </div>
+                        <!-- Botón para abrir el modal de creación de usuario -->
+                        <button id="createUserBtn" class="btn-primary flex items-center justify-center ml-4">
+                            <i class="fas fa-plus mr-2"></i> Crear Usuario
+                        </button>
                     </div>
                     <!-- Controles para el límite de filas y botón de carga de datos de Oracle -->
                     <div class="flex items-center space-x-3">
@@ -277,6 +270,23 @@ if (!isset($_SESSION['user_id'])) {
     </div>
 </div>
 
+<!-- Logout Confirmation Modal -->
+<div id="logoutModal" class="modal">
+    <div class="modal-content w-96">
+        <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Confirmar Cierre de Sesión</h3>
+            <p>¿Estás seguro que deseas cerrar tu sesión?</p>
+
+            <div class="flex justify-end mt-6 space-x-4">
+                <button id="cancelLogoutBtn" class="btn-secondary">Cancelar</button>
+                <button id="confirmLogoutBtn" class="btn-danger">
+                    Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Reset Confirmation Modal: Modal para confirmar el reinicio de todos los datos -->
 <div id="resetModal" class="modal">
     <div class="modal-content w-96">
@@ -296,9 +306,28 @@ if (!isset($_SESSION['user_id'])) {
     </div>
 </div>
 
+<!-- Honorary Mention Modal -->
+<div id="honoraryModal" class="modal">
+    <div class="modal-content w-96">
+        <div class="p-6 text-center">
+            <div class="flex justify-end">
+                <button id="closeHonoraryModal" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-4">¡Felicitaciones!</h3>
+            <p>Has descubierto el huevo de pascua de Matrix.</p>
+            <p class="text-sm text-gray-500 mt-2">Mención honorífica por tu curiosidad.</p>
+        </div>
+    </div>
+</div>
+
+<canvas id="matrixCanvas" class="hidden"></canvas>
+
 <!-- Enlace a la librería Toastify JS (para notificaciones) -->
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <!-- Enlace al archivo JavaScript principal de la aplicación -->
 <script src="script.js"></script> <!-- Enlace al JavaScript externo -->
+<script src="easter-egg.js"></script>
 </body>
 </html>
