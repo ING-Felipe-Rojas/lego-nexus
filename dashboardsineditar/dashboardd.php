@@ -1,3 +1,19 @@
+<?php
+session_start();
+
+// VERIFICACIÓN DE SEGURIDAD ESTÁNDAR Y CORRECTA:
+// El script 'login.php' es el único que comprueba la contraseña. Si tiene éxito,
+// crea la variable de sesión 'user_id'.
+// Ahora, esta página solo necesita comprobar si esa marca de 'autenticado' existe.
+
+if (!isset($_SESSION['user_id'])) {
+    // Si 'user_id' no existe en la sesión, significa que el usuario NUNCA ha iniciado sesión.
+    // Se le redirige a la página de login y se detiene la ejecución del script.
+    header("Location: logo-animado/HTML/newlogin.html");
+    exit;
+}
+
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -21,9 +37,14 @@
             <button id="sidebarToggleBtn" class="text-white text-2xl mr-4 focus:outline-none">
                 <i class="fas fa-bars"></i>
             </button>
-            <h1 class="text-xl font-bold text-white">Sistema de Administración de Usuarios</h1>
+            <h1 class="text-xl font-bold text-white">Gestion de usuarios</h1>
         </div>
-        <img src="https://www.unap.cl/prontus_unap/imag/logo_unap_2022-07_blanco.png" alt="Logo UNAP" class="h-10">
+        <div class="flex items-center">
+            <button id="darkModeToggle" class="text-white text-2xl mr-4 focus:outline-none">
+                <i class="fas fa-moon"></i>
+            </button>
+            <img src="https://www.unap.cl/prontus_unap/imag/logo_unap_2022-07_blanco.png" alt="Logo UNAP" class="h-10">
+        </div>
     </header>
 
     <!-- Main Content Area: Contiene el sidebar y el área principal de contenido -->
@@ -31,11 +52,21 @@
         <!-- Sidebar: Menú de navegación lateral con opciones de filtro y creación de usuario -->
         <aside id="sidebar" class="sidebar text-white overflow-y-auto flex flex-col">
             <div class="p-4">
+
+                <!-- Botón de Perfil -->
+                <a href="perfil.php" class="role-item flex items-center justify-start mb-6">
+                    <i class="fas fa-user-cog mr-2"></i> <span class="sidebar-text">Perfil</span>
+                </a>
+
                 <!-- Botón para abrir el modal de creación de usuario -->
-                <button id="createUserBtn" class="btn-primary w-full flex items-center justify-center mb-6">
+                <button id="createUserBtn" class="btn-primary w-full flex items-center justify-center mb-2">
                     <i class="fas fa-plus mr-2"></i> <span class="sidebar-text">Crear Usuario</span>
                 </button>
 
+                <!-- Botón de Inicio -->
+                <a href="dashboardd.php" class="role-item flex items-center justify-start mb-2">
+                    <i class="fas fa-home mr-2"></i> <span class="sidebar-text">Inicio</span>
+                </a>
                 <!-- Sección de filtros por rol -->
                 <div class="mb-4">
                     <h3 class="font-bold mb-2"><span class="sidebar-text">Filtros</span></h3>
@@ -103,7 +134,7 @@
 
             </div>
             <div class="p-4 mt-auto">
-                <a href="logo-animado/HTML/newlogin.html" id="logoutBtn" class="btn-danger w-full flex items-center justify-center">
+                <a href="logout.php" id="logoutBtn" class="btn-danger w-full flex items-center justify-center">
                     <i class="fas fa-sign-out-alt mr-2"></i> <span class="sidebar-text">Cerrar Sesión</span>
                 </a>
             </div>
@@ -126,7 +157,7 @@
                     <!-- Controles para el límite de filas y botón de carga de datos de Oracle -->
                     <div class="flex items-center space-x-3">
                         <input id="oracleLimit" type="number" min="1" max="1000" value="100" class="form-control w-24" title="Límite de filas">
-                        <button id="loadOracleBtn" class="btn-primary">Cargar Usuarios</button>
+                        <button id="loadOracleBtn" class="btn-primary">Cargar</button>
                     </div>
                 </div>
                 <!-- Área para mostrar el estado de la carga de datos de Oracle -->

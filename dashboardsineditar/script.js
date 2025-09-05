@@ -4,7 +4,6 @@ const sidebar = document.getElementById('sidebar');
 const toggleSidebarBtn = document.getElementById('sidebarToggleBtn');
 const mainContent = document.querySelector('main');
 const createUserBtn = document.getElementById('createUserBtn');
-const addFirstUserBtn = document.getElementById('addFirstUserBtn');
 const roleItems = document.querySelectorAll('.role-item[data-role]');
 const userModal = document.getElementById('userModal');
 const closeModal = document.getElementById('closeModal');
@@ -17,8 +16,8 @@ const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
 const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 const searchInput = document.getElementById('searchInput');
 const searchIcon = document.getElementById('searchIcon');
-const usersTable = document.getElementById('usersTable');
-const noUsersMessage = document.getElementById('noUsersMessage');
+const logoutBtn = document.getElementById('logoutBtn');
+const darkModeToggle = document.getElementById('darkModeToggle');
 
 // Elementos para la sección Oracle (SGU_USUARIO)
 const loadOracleBtn = document.getElementById('loadOracleBtn');
@@ -55,19 +54,29 @@ funcionarios: 2,
 externos: 3
 };
 
-// Initialize users from localStorage or create empty array
-let users = JSON.parse(localStorage.getItem('users')) || [];
-let currentFilter = { role: null, subRole: null };
 
 /**
 * @function init
 * @description Inicializa la aplicación al cargar el DOM.
-*              Renderiza la tabla de usuarios (localStorage) y carga los usuarios de Oracle.
+*              Carga los usuarios de Oracle y aplica el modo oscuro si está guardado.
 */
 // Initialize the app
-renderTable(); // Esto es para la tabla de usuarios de localStorage
-updateUIState(); // Esto es para la tabla de usuarios de localStorage
 loadAndRenderOracleUsers(); // Cargar todos los usuarios de Oracle al inicio
+
+// Dark Mode Initialization
+if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+    darkModeToggle.querySelector('i').classList.replace('fa-moon', 'fa-sun');
+} else {
+    document.body.classList.remove('dark-mode');
+    darkModeToggle.querySelector('i').classList.replace('fa-sun', 'fa-moon');
+}
+
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+        window.location.href = 'index.html';
+    });
+}
 
 /**
 * @function toggleSidebar
@@ -89,6 +98,24 @@ chevron.classList.remove('rotated');
 });
 }
 });
+
+/**
+* @function handleDarkModeToggle
+* @description Maneja el clic en el botón de modo oscuro.
+*              Alterna la clase 'dark-mode' en el body y guarda la preferencia.
+*/
+darkModeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    if (isDarkMode) {
+        darkModeToggle.querySelector('i').classList.replace('fa-moon', 'fa-sun');
+        localStorage.setItem('theme', 'dark');
+    } else {
+        darkModeToggle.querySelector('i').classList.replace('fa-sun', 'fa-moon');
+        localStorage.setItem('theme', 'light');
+    }
+});
+
 
 /**
 * @function handleRoleItemClick
@@ -120,26 +147,6 @@ searchIcon.style.display = 'block';
 });
 });
 
-/**
-* @function handleSubRoleItemClick
-* @description Maneja el clic en los elementos de sub-rol del sidebar.
-*              Aplica el filtro de sub-rol a la tabla de usuarios (localStorage) y resalta el filtro seleccionado.
-*/
-document.querySelectorAll('.sub-role .role-item').forEach(item => {
-item.addEventListener('click', () => {
-const role = item.closest('.role-container').querySelector('.role-item[data-role]').dataset.role;
-const subRole = item.dataset.subrole;
-
-currentFilter = { role, subRole };
-renderTable();
-
-// Highlight selected filter
-document.querySelectorAll('.sub-role .role-item').forEach(el => {
-el.classList.remove('bg-white', 'bg-opacity-20');
-});
-item.classList.add('bg-white', 'bg-opacity-20');
-});
-});
 
 /**
 * @function handleUserRoleSelectChange
@@ -172,9 +179,6 @@ createUserBtn.addEventListener('click', () => {
 openCreateUserModal();
 });
 
-addFirstUserBtn.addEventListener('click', () => {
-openCreateUserModal();
-});
 
 /**
 * @function handleLoadOracleBtnClick
@@ -217,71 +221,74 @@ userModal.style.display = 'none';
 /**
 * @function handleUserFormSubmit
 * @description Maneja el envío del formulario de usuario.
-*              Valida los datos, envía la información a la API de creación de usuario y maneja la respuesta.
+*              Valida los datos, envía la información a la API de creación o actualización y maneja la respuesta.
 */
 userForm.addEventListener('submit', function(e) {
-e.preventDefault();
+    e.preventDefault();
 
-if (!validateForm()) {
-return;
-}
+    if (!validateForm()) {
+        return;
+    }
 
-const userId = document.getElementById('userId').value;
-const isEditing = userId !== '';
+    const userId = document.getElementById('userId').value;
+    const isEditing = userId !== '';
 
-// NOTE: The backend script currently only supports CREATING users.
-// The 'department' and 'subRole' fields are not saved to the database.
-const userData = {
-name: document.getElementById('userName').value,
-email: document.getElementById('userEmail').value,
-phone: document.getElementById('userPhone').value,
-role: document.getElementById('userRole').value,
-// id: userId // Include if you implement update functionality
-};
+    // The 'department' and 'subRole' fields are not part of the DB schema provided.
+    const userData = {
+        name: document.getElementById('userName').value,
+        email: document.getElementById('userEmail').value,
+        phone: document.getElementById('userPhone').value,
+        role: document.getElementById('userRole').value, // This is the role NAME ('alumnos', etc)
+    };
+    
+    let apiUrl = 'api/crear_usuario.php';
+    if (isEditing) {
+        // IMPORTANT: Assumes the API for update needs the user ID.
+        // The user object from the database must have a unique identifier, here assumed to be 'USR_ID'.
+        userData.id = userId; 
+        apiUrl = 'api/actualizar_usuario.php';
+    }
 
-const saveBtn = document.getElementById('saveBtn');
-const saveSpinner = document.getElementById('saveSpinner');
-const saveText = document.getElementById('saveText');
+    const saveBtn = document.getElementById('saveBtn');
+    const saveSpinner = document.getElementById('saveSpinner');
+    const saveText = document.getElementById('saveText');
 
-// Show loading state
-saveBtn.disabled = true;
-saveSpinner.classList.remove('hidden');
-saveText.textContent = isEditing ? 'Actualizando...' : 'Creando...';
+    // Show loading state
+    saveBtn.disabled = true;
+    saveSpinner.classList.remove('hidden');
+    saveText.textContent = isEditing ? 'Actualizando...' : 'Guardando...';
 
-// API call to the backend
-fetch('api/crear_usuario.php', {
-method: 'POST',
-headers: {
-'Content-Type': 'application/json',
-'Accept': 'application/json'
-},
-body: JSON.stringify(userData)
-})
-.then(response => response.json())
-.then(data => {
-if (data.success) {
-showToast(data.message || 'Usuario guardado correctamente', 'success');
-userModal.style.display = 'none';
-// Refresh the Oracle table to show the new user
-if (typeof loadAndRenderOracleUsers === 'function') {
-loadAndRenderOracleUsers();
-}
-} else {
-// Show error message from the server
-showToast(data.error || 'Ocurrió un error en el servidor', 'error');
-}
-})
-.catch(error => {
-console.error('Error en la llamada fetch:', error);
-showToast('Error de conexión. No se pudo contactar al servidor.', 'error');
-})
-.finally(() => {
-// Reset loading state
-saveBtn.disabled = false;
-saveSpinner.classList.add('hidden');
-saveText.textContent = 'Guardar';
+    // API call to the backend
+    fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(userData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message || `Usuario ${isEditing ? 'actualizado' : 'guardado'} correctamente`, 'success');
+            userModal.style.display = 'none';
+            loadAndRenderOracleUsers(); // Refresh the table
+        } else {
+            showToast(data.error || 'Ocurrió un error en el servidor', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error en la llamada fetch:', error);
+        showToast('Error de conexión. No se pudo contactar al servidor.', 'error');
+    })
+    .finally(() => {
+        // Reset loading state
+        saveBtn.disabled = false;
+        saveSpinner.classList.add('hidden');
+        saveText.textContent = 'Guardar';
+    });
 });
-});
+
 
 /**
 * @function cancelDeleteBtnClick
@@ -294,34 +301,57 @@ deleteModal.style.display = 'none';
 /**
 * @function confirmDeleteBtnClick
 * @description Maneja la confirmación de eliminación de un usuario.
-*              Simula la eliminación del usuario del almacenamiento local y actualiza la UI.
+*              Llama a la API para eliminar el usuario y actualiza la tabla.
 */
 confirmDeleteBtn.addEventListener('click', () => {
-const userId = deleteModal.dataset.userId;
+    const userId = confirmDeleteBtn.dataset.userId;
+    if (!userId) {
+        showToast('No se encontró el ID del usuario a eliminar.', 'error');
+        deleteModal.style.display = 'none';
+        return;
+    }
 
-// Show loading state
-document.getElementById('confirmDeleteBtn').disabled = true;
-document.getElementById('deleteSpinner').classList.remove('hidden');
-document.getElementById('deleteText').textContent = 'Eliminando...';
+    const deleteSpinner = document.getElementById('deleteSpinner');
+    const deleteText = document.getElementById('deleteText');
 
-// Simulate API call
-setTimeout(() => {
-users = users.filter(user => user.id !== userId);
-localStorage.setItem('users', JSON.stringify(users));
+    // Show loading state
+    confirmDeleteBtn.disabled = true;
+    deleteSpinner.classList.remove('hidden');
+    deleteText.textContent = 'Eliminando...';
 
-renderTable();
-updateUIState();
-deleteModal.style.display = 'none';
-
-// Reset loading state
-document.getElementById('confirmDeleteBtn').disabled = false;
-document.getElementById('deleteSpinner').classList.add('hidden');
-document.getElementById('deleteText').textContent = 'Eliminar';
-
-// Show success toast
-showToast('Usuario eliminado correctamente', 'success');
-}, 800);
+    // API call to the backend to delete the user
+    // IMPORTANT: This requires 'api/eliminar_usuario.php' to exist and handle the request.
+    fetch(`api/eliminar_usuario.php`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ id: userId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message || 'Usuario eliminado correctamente', 'success');
+            deleteModal.style.display = 'none';
+            loadAndRenderOracleUsers(); // Refresh the table
+        } else {
+            showToast(data.error || 'Ocurrió un error al eliminar el usuario', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error en la llamada fetch para eliminar:', error);
+        showToast('Error de conexión. No se pudo contactar al servidor.', 'error');
+    })
+    .finally(() => {
+        // Reset loading state
+        confirmDeleteBtn.disabled = false;
+        deleteSpinner.classList.add('hidden');
+        deleteText.textContent = 'Eliminar';
+        delete confirmDeleteBtn.dataset.userId; // Clean up
+    });
 });
+
 
 /**
 * @function handleSearchInput
@@ -381,6 +411,62 @@ el.classList.add('hidden');
 userModal.style.display = 'flex';
 }
 
+/**
+* @function openEditUserModal
+* @description Abre el modal para editar un usuario existente y lo puebla con sus datos.
+* @param {Object} user - El objeto de usuario con los datos de la fila.
+*/
+function openEditUserModal(user) {
+    // IMPORTANT: Assumes the user object from the API contains a unique identifier, e.g., 'USR_ID'.
+    if (!user || typeof user.USR_ID === 'undefined') {
+        showToast('No se pudo obtener el ID del usuario para editar.', 'error');
+        return;
+    }
+
+    document.getElementById('modalTitle').textContent = 'Editar Usuario';
+    document.getElementById('userId').value = user.USR_ID; // Hidden field for the user ID
+    document.getElementById('userName').value = user.USR_NOMBRE || '';
+    document.getElementById('userEmail').value = user.USR_CORREO || '';
+    document.getElementById('userPhone').value = user.USR_TELEFONO || '';
+    
+    // Find role name from role ID
+    const roleNameMap = Object.fromEntries(Object.entries(roleIdMap).map(([name, id]) => [id, name]));
+    const roleName = roleNameMap[user.USR_ROL_ID] || '';
+    document.getElementById('userRole').value = roleName;
+
+    // Department is not in the provided columns, so we leave it empty.
+    document.getElementById('userDepartment').value = ''; 
+
+    // Clear any previous error messages
+    document.querySelectorAll('.error-message').forEach(el => {
+        el.classList.add('hidden');
+    });
+
+    userModal.style.display = 'flex';
+}
+
+/**
+* @function openDeleteUserModal
+* @description Abre el modal de confirmación para eliminar un usuario.
+* @param {Object} user - El objeto de usuario con los datos de la fila.
+*/
+function openDeleteUserModal(user) {
+    if (!user || typeof user.USR_ID === 'undefined') {
+        showToast('No se pudo obtener el ID del usuario para eliminar.', 'error');
+        return;
+    }
+    
+    const deleteUserNameSpan = document.getElementById('deleteUserName');
+    if (deleteUserNameSpan) {
+        deleteUserNameSpan.textContent = user.USR_NOMBRE || 'este usuario';
+    }
+
+    // Store the user ID on the confirm button to use it when the user confirms
+    confirmDeleteBtn.dataset.userId = user.USR_ID;
+
+    deleteModal.style.display = 'flex';
+}
+
 // ---- Ayudantes de Oracle (SGU_USUARIO) ----
 /**
 * @function loadAndRenderOracleUsers
@@ -419,7 +505,8 @@ const msg = data && data.error ? data.error : `Error HTTP ${resp.status}`;
 throw new Error(msg);
 }
 
-renderOracleTable(data.columns || [], data.rows || []);
+// IMPORTANT: The API at 'api/usuarios.php' must return 'USR_ID' for edit/delete to work.
+renderOracleTable(data.rows || []);
 setOracleStatus(`Cargadas ${data.count || 0} filas`);
 if (!data.rows || data.rows.length === 0) toggleOracleNoData(true);
 } catch (err) {
@@ -433,36 +520,69 @@ toggleOracleNoData(true);
 /**
 * @function renderOracleTable
 * @description Renderiza los datos obtenidos de la API de Oracle en la tabla SGU_USUARIO.
-* @param {Array<string>} columns - Nombres de las columnas a mostrar.
 * @param {Array<Object>} rows - Filas de datos a renderizar.
 */
-function renderOracleTable(columns, rows) {
-clearOracleTable();
+function renderOracleTable(rows) {
+    clearOracleTable();
 
-// Encabezados
-const trHead = document.createElement('tr');
-if (columns.length === 0 && rows.length > 0) {
-columns = Object.keys(rows[0]);
-}
-columns.forEach(col => {
-const th = document.createElement('th');
-th.textContent = col;
-trHead.appendChild(th);
-});
-oracleTableHead.appendChild(trHead);
+    const headers = ["Nombre", "Correo", "Teléfono", "Rol", "Fecha de registro", "Acciones"];
+    
+    // Create reverse map for roles to get name from ID
+    const roleNameMap = Object.fromEntries(Object.entries(roleIdMap).map(([name, id]) => [id, name]));
 
-// Cuerpo
-rows.forEach(row => {
-const tr = document.createElement('tr');
-columns.forEach(col => {
-const td = document.createElement('td');
-const val = row[col];
-td.textContent = val === null || typeof val === 'undefined' ? '' : String(val);
-tr.appendChild(td);
-});
-oracleTableBody.appendChild(tr);
-});
+    // Encabezados
+    const trHead = document.createElement('tr');
+    headers.forEach(headerText => {
+        const th = document.createElement('th');
+        th.textContent = headerText;
+        trHead.appendChild(th);
+    });
+    oracleTableHead.appendChild(trHead);
+
+    // Cuerpo
+    rows.forEach(row => {
+        const tr = document.createElement('tr');
+
+        // IMPORTANT: The keys here ('USR_NOMBRE', 'USR_CORREO', etc.) 
+        // must match what the 'api/usuarios.php' script returns.
+        const cells = [
+            row.USR_NOMBRE,
+            row.USR_CORREO,
+            row.USR_TELEFONO,
+            roleNameMap[row.USR_ROL_ID] ? capitalizeFirstLetter(roleNameMap[row.USR_ROL_ID]) : 'Desconocido',
+            row.USR_FECHA_REG
+        ];
+
+        cells.forEach(cellContent => {
+            const td = document.createElement('td');
+            td.textContent = cellContent === null || typeof cellContent === 'undefined' ? '' : String(cellContent);
+            tr.appendChild(td);
+        });
+
+        // Actions cell
+        const tdActions = document.createElement('td');
+        tdActions.classList.add('action-buttons'); // For styling
+
+        const editBtn = document.createElement('button');
+        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+        editBtn.className = 'btn-edit';
+        editBtn.title = 'Editar';
+        editBtn.addEventListener('click', () => openEditUserModal(row));
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        deleteBtn.className = 'btn-delete';
+        deleteBtn.title = 'Eliminar';
+        deleteBtn.addEventListener('click', () => openDeleteUserModal(row));
+        
+        tdActions.appendChild(editBtn);
+        tdActions.appendChild(deleteBtn);
+        tr.appendChild(tdActions);
+
+        oracleTableBody.appendChild(tr);
+    });
 }
+
 
 /**
 * @function clearOracleTable
@@ -493,51 +613,6 @@ function setOracleStatus(text) {
 if (oracleStatus) oracleStatus.textContent = text || '';
 }
 
-/**
-* @function openEditUserModal
-* @description Abre el modal para editar un usuario existente (funcionalidad de localStorage).
-* @param {string} userId - El ID del usuario a editar.
-*/
-function openEditUserModal(userId) {
-const user = users.find(u => u.id === userId);
-if (!user) return;
-
-document.getElementById('modalTitle').textContent = 'Editar Usuario';
-document.getElementById('userId').value = user.id;
-document.getElementById('userName').value = user.name;
-document.getElementById('userEmail').value = user.email;
-document.getElementById('userPhone').value = user.phone;
-document.getElementById('userDepartment').value = user.department;
-document.getElementById('userRole').value = user.role;
-
-// Sub-roles dropdown remains disabled
-userSubRoleSelect.disabled = true;
-userSubRoleSelect.innerHTML = '<option value="">Seleccione un sub-rol</option>';
-// No population logic needed here as it's disabled
-
-// document.getElementById('userSubRole').value = user.subRole; // This line is now irrelevant
-
-// Clear any error messages
-document.querySelectorAll('.error-message').forEach(el => {
-el.classList.add('hidden');
-});
-
-userModal.style.display = 'flex';
-}
-
-/**
-* @function openDeleteModal
-* @description Abre el modal de confirmación para eliminar un usuario (funcionalidad de localStorage).
-* @param {string} userId - El ID del usuario a eliminar.
-*/
-function openDeleteModal(userId) {
-const user = users.find(u => u.id === userId);
-if (!user) return;
-
-document.getElementById('deleteUserName').textContent = user.name;
-deleteModal.dataset.userId = userId;
-deleteModal.style.display = 'flex';
-}
 
 /**
 * @function validateForm
@@ -561,7 +636,7 @@ nameError.classList.add('hidden');
 // Email validation
 const emailInput = document.getElementById('userEmail');
 const emailError = document.getElementById('userEmailError');
-const emailRegex = /^[\S+@\S+\.\S+]+$/;
+const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
 if (!emailRegex.test(emailInput.value)) {
 emailError.classList.remove('hidden');
 isValid = false;
@@ -582,7 +657,7 @@ else {
 phoneError.classList.add('hidden');
 }
 
-// Department validation
+// Department validation (optional, as it's not in the main table)
 const deptInput = document.getElementById('userDepartment');
 const deptError = document.getElementById('userDepartmentError');
 if (!deptInput.value.trim()) {
@@ -604,94 +679,9 @@ else {
 roleError.classList.add('hidden');
 }
 
-// Sub-Role validation (disabled temporarily)
-// const subRoleInput = document.getElementById('userSubRole');
-// const subRoleError = document.getElementById('userSubRoleError');
-// if (!subRoleInput.value) {
-//     subRoleError.classList.remove('hidden');
-//     isValid = false;
-// }
-// else {
-//     subRoleError.classList.add('hidden');
-// }
-
 return isValid;
 }
 
-/**
-* @function renderTable
-* @description Renderiza la tabla de usuarios (funcionalidad de localStorage).
-*              Aplica filtros de rol/sub-rol y búsqueda a los datos locales.
-*/
-function renderTable() {
-const tableBody = document.querySelector('#usersTable tbody');
-tableBody.innerHTML = '';
-
-let filteredUsers = [...users];
-
-// Apply role/subrole filter
-if (currentFilter.role) {
-filteredUsers = filteredUsers.filter(user => user.role === currentFilter.role);
-
-if (currentFilter.subRole) {
-filteredUsers = filteredUsers.filter(user => user.subRole === currentFilter.subRole);
-}
-}
-
-// Apply search filter (This part is now handled by loadAndRenderOracleUsers for Oracle table)
-// const searchTerm = searchInput.value.toLowerCase();
-// if (searchTerm) {
-//     filteredUsers = filteredUsers.filter(user =>
-//         user.name.toLowerCase().includes(searchTerm) ||
-//         user.email.toLowerCase().includes(searchTerm) ||
-//         user.department.toLowerCase().includes(searchTerm)
-//     );
-// }
-
-// Render filtered users
-filteredUsers.forEach(user => {
-const tr = document.createElement('tr');
-
-// Get display names for role and subRole
-const roleDisplay = capitalizeFirstLetter(user.role);
-
-let subRoleDisplay = '';
-// Sub-role display logic removed/disabled
-// if (subRoles[user.role]) {
-//     const subRoleObj = subRoles[user.role].find(sr => sr.value === user.subRole);
-//     subRoleDisplay = subRoleObj ? subRoleObj.label : user.subRole;
-// }
-
-tr.innerHTML = `\n            <td>${user.name}</td>\n            <td>${user.email}</td>\n            <td>${user.phone}</td>\n            <td>${user.department}</td>\n            <td>${roleDisplay}</td>\n            <td>${subRoleDisplay}</td>\n            <td>\n              <button class="text-blue-600 hover:text-blue-800 mr-3 edit-btn" data-id="${user.id}">\n                <i class="fas fa-edit"></i>\n              </button>\n              <button class="text-red-600 hover:text-red-800 delete-btn" data-id="${user.id}">\n                <i class="fas fa-trash-alt"></i>\n              </button>\n            </td>\n          `;
-
-tableBody.appendChild(tr);
-});
-
-// Add event listeners to edit and delete buttons
-document.querySelectorAll('.edit-btn').forEach(btn => {
-btn.addEventListener('click', () => openEditUserModal(btn.dataset.id));
-});
-
-document.querySelectorAll('.delete-btn').forEach(btn => {
-btn.addEventListener('click', () => openDeleteModal(btn.dataset.id));
-});
-}
-
-/**
-* @function updateUIState
-* @description Actualiza el estado de la interfaz de usuario basado en si hay usuarios en la tabla (localStorage).
-*              Muestra/oculta la tabla o el mensaje de "No hay usuarios".
-*/
-function updateUIState() {
-if (users.length === 0) {
-usersTable.classList.add('hidden');
-noUsersMessage.classList.remove('hidden');
-}
-else {
-usersTable.classList.remove('hidden');
-noUsersMessage.classList.add('hidden');
-}
-}
 
 /**
 * @function showToast
@@ -720,6 +710,7 @@ stopOnFocus: true
 * @returns {string} La cadena con la primera letra en mayúscula.
 */
 function capitalizeFirstLetter(string) {
+if (!string) return '';
 return string.charAt(0).toUpperCase() + string.slice(1);
 }
 });
