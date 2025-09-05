@@ -1,0 +1,1 @@
+lego-nexus es el inicio de un proyecto que en la practica nos toco a Robby Peña, Luis Cabrera y yo, tomar desde un comienzo para un gran proyecto de la universidad UNAP, el cual fue nombrado NEXUS, si no fuera por el arduo desempeño de Robby para que el backen funcione y pormi para las modificaciones y luis con su boton del modo oscuro este proyecto no huebiera salido adelante.
